@@ -91,6 +91,14 @@ module OData
       self
     end
 
+    # Add search term criteria to query.
+    # @param value
+    # @return [self]
+    def search_term(value)
+      criteria_set[:search_term] = value
+      self
+    end
+
     # Add inline count criteria to query.
     # Not Supported in CRM2011
     # @return [self]
@@ -146,13 +154,15 @@ module OData
           orderby:      [],
           skip:         0,
           top:          0,
-          inline_count: false
+          inline_count: false,
+          search_term:   nil
       }
     end
 
     def assemble_criteria
       criteria = [
         filter_criteria,
+        search_term_criteria(:search_term),
         list_criteria(:orderby),
         list_criteria(:expand),
         list_criteria(:select),
@@ -177,6 +187,13 @@ module OData
     # inlinecount not supported by Microsoft CRM 2011
     def inline_count_criteria
       criteria_set[:inline_count] ? '$inlinecount=allpages' : nil
+    end
+
+    def search_term_criteria(name)
+      search = criteria_set[name].present? == 0 ? nil : "searchTerm='#{criteria_set[name]}'"
+      if search.present?
+        search += '&includePrerelease=false'
+      end
     end
 
     def paging_criteria(name)

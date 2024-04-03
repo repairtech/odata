@@ -20,7 +20,10 @@ module OData
       # @return [OData::Entity] each entity in turn for the query result
       MAX_EXECUTIONS = 100
       def each(&block)
-        finished_processing = false
+        last_processed_url = next_page_url
+        process_results(&block)
+
+        finished_processing = last_processed_url == next_page_url
         execution_count = 0
         until finished_processing
           last_processed_url = next_page_url
@@ -58,7 +61,8 @@ module OData
       end
 
       def next_page_url
-        return unless next_page
+        return unless next_page && next_page.attributes['href']
+
         # We used to get the url in http format, then it changed
         # to https. Let's remove both
         http_verison =  service.service_url.sub('https://', 'http://')

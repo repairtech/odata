@@ -124,6 +124,14 @@ module OData
     # @param additional_options [Hash] options to pass to Typhoeus
     # @return [Typhoeus::Response]
     def execute(url_chunk, additional_options = {}, escaped = false)
+      # There must be a better way to do it,
+      # but we only use it for Chocolatey, so it won't break anything else
+      # This just forces us to use Search endpoint for searching through
+      # Chocolatey instead of Packages.
+      if url_chunk && url_chunk.starts_with?('Packages?')
+        url_chunk = url_chunk.gsub('Packages?', 'Search()?')
+      end
+
       url = if escaped
         "#{URI.escape(service_url)}/#{url_chunk}"
       else
