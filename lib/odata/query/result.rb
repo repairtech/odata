@@ -18,11 +18,17 @@ module OData
       # Provided for Enumerable functionality
       # @param block [block] a block to evaluate
       # @return [OData::Entity] each entity in turn for the query result
+      MAX_EXECUTIONS = 100
       def each(&block)
-        process_results(&block)
-        until next_page.nil?
-          result = service.execute(next_page_url)
+        finished_processing = false
+        execution_count = 0
+        until finished_processing
+          last_processed_url = next_page_url
+          result = service.execute(last_processed_url, {}, true)
           process_results(&block)
+          execution_count += 1
+          finished_processing = next_page.nil? || last_processed_url == next_page_url
+          raise 'Possible infinite loop detected' if execution_count > MAX_EXECUTIONS
         end
       end
 
@@ -52,7 +58,15 @@ module OData
       end
 
       def next_page_url
-        next_page.attributes['href'].value.gsub(service.service_url, '')
+        return unless next_page
+        # We used to get the url in http format, then it changed
+        # to https. Let's remove both
+        http_verison =  service.service_url.sub('https://', 'http://')
+        https_version = service.service_url.sub('http://', 'https://')
+        next_page.attributes['href']
+                 .value
+                 .gsub(http_verison, '')
+                 .gsub(https_version, '')
       end
     end
   end
