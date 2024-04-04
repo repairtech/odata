@@ -61,16 +61,17 @@ module OData
       end
 
       def next_page_url
-        return unless next_page && next_page.attributes['href']
+        next_page_value = next_page
+        return unless next_page_value && next_page_value.attributes['href']
 
         # We used to get the url in http format, then it changed
         # to https. Let's remove both
         http_verison =  service.service_url.sub('https://', 'http://')
         https_version = service.service_url.sub('http://', 'https://')
-        next_page.attributes['href']
-                 .value
-                 .gsub(http_verison, '')
-                 .gsub(https_version, '')
+        next_page_value.attributes['href']
+                       .value
+                       .gsub(http_verison, '')
+                       .gsub(https_version, '')
       end
     end
   end
